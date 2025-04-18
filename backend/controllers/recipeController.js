@@ -5,6 +5,20 @@ exports.getAllRecipes = async (req, res) => {
   res.json(recipes);
 };
 
+exports.getUserRecipes = async (req, res) => {
+  // First check if user exists
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  const recipes = await Recipe.find({ user: req.user.id });
+
+  if (!recipes) {
+    return res.status(404).json({ error: "No recipes found for this user" });
+  }
+  res.json(recipes);
+};
+
+
 exports.createRecipe = async (req, res) => {
   // First check if user exists
   if (!req.user || !req.user.id) {

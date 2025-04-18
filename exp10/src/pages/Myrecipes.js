@@ -1,56 +1,47 @@
-import React, { useState } from 'react';
+import React, { useEffect,useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import BasicExample from '../components/Card';
 import '../styles/RecipePages.css';
 import { useFavorites } from '../contexts/FavoritesContext';
 
 function Myrecipes() {
-  // Initial recipes data
-  const initialRecipes = [
-    { 
-      id: 1, 
-      title: 'Homemade Pizza', 
-      description: 'My special pizza recipe with homemade dough and fresh toppings.',
-      image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=60',
-      ingredients: ['2 cups flour', '1 cup warm water', '2 tbsp olive oil', '1 tsp salt', '1 tsp yeast', 'Your favorite toppings'],
-      instructions: '1. Mix flour, water, oil, salt, and yeast in a bowl.\n2. Knead for 10 minutes until smooth.\n3. Let rise for 1 hour.\n4. Stretch dough and add toppings.\n5. Bake at 475°F for 12-15 minutes.'
-    },
-    { 
-      id: 2, 
-      title: 'Blueberry Muffins', 
-      description: 'Sweet and fluffy blueberry muffins perfect for breakfast.',
-      image: 'https://images.unsplash.com/photo-1587668178277-295251f900ce?auto=format&fit=crop&w=500&q=60',
-      ingredients: ['2 cups flour', '1 cup sugar', '2 tsp baking powder', '1/2 tsp salt', '1/2 cup butter', '2 eggs', '1 cup milk', '2 cups blueberries'],
-      instructions: '1. Preheat oven to 375°F.\n2. Mix dry ingredients in one bowl.\n3. Cream butter and sugar, add eggs and milk.\n4. Combine with dry ingredients and fold in blueberries.\n5. Fill muffin cups 2/3 full.\n6. Bake for 20-25 minutes.'
-    },
-    { 
-      id: 3, 
-      title: 'Grilled Salmon', 
-      description: 'Healthy grilled salmon with lemon and herbs.',
-      image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=500&q=60',
-      ingredients: ['4 salmon fillets', '2 tbsp olive oil', '2 cloves garlic, minced', '1 lemon, juiced', '1 tbsp fresh dill', 'Salt and pepper to taste'],
-      instructions: '1. Mix olive oil, garlic, lemon juice, and dill in a bowl.\n2. Season salmon with salt and pepper.\n3. Brush salmon with marinade.\n4. Grill for 4-5 minutes per side.\n5. Serve with lemon wedges.'
-    },
-    { 
-      id: 4, 
-      title: 'Mushroom Risotto', 
-      description: 'Creamy risotto with sautéed mushrooms and parmesan.',
-      image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=500&q=60',
-      ingredients: ['1 cup arborio rice', '4 cups vegetable broth', '1/2 cup white wine', '1 onion, diced', '2 cups mushrooms, sliced', '2 tbsp butter', '1/2 cup parmesan cheese', 'Salt and pepper to taste'],
-      instructions: '1. Sauté onion in butter until translucent.\n2. Add mushrooms and cook until soft.\n3. Add rice and toast for 2 minutes.\n4. Add wine and stir until absorbed.\n5. Add broth 1/2 cup at a time, stirring frequently.\n6. Once rice is creamy and cooked, stir in parmesan.\n7. Season with salt and pepper.'
-    }
-  ];
-
-  // States
-  const [recipes, setRecipes] = useState(initialRecipes);
+  const [recipes, setRecipes] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [currentRecipe, setCurrentRecipe] = useState({ id: null, title: '', description: '', image: '', ingredients: [], instructions: '' });
 
-  // Use favorites context
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
+
+  // 🧠 Fetch recipes on mount
+  useEffect(() => {
+    const fetchUserRecipes = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/recipes/user', {
+          headers: {
+            'Content-Type': 'application/json',
+            'method': 'GET',
+            // You may need to add auth headers (like JWT) here
+            credentials: 'include' 
+          }
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch user recipes');
+        }
+
+        const data = await res.json();
+        setRecipes(data);
+        console.log('Fetched user recipes:', data);
+      } catch (err) {
+        console.error('Error fetching user recipes:', err.message);
+      }
+    };
+
+    fetchUserRecipes();
+  }, []);
+
 
   // Form handling
   const handleInputChange = (e) => {

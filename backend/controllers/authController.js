@@ -51,6 +51,8 @@ exports.login = async (req, res) => {
         email: user.email
       }
     });
+    console.log("Login successful:", email);
+
 
   } catch (err) {
     console.error("Login error:", err.message);
@@ -58,3 +60,32 @@ exports.login = async (req, res) => {
   }
 };
 
+// Check if user is authenticated via session
+exports.checkAuth = (req, res) => {
+  if (req.session && req.session.user) {
+    return res.status(200).json({
+      user: req.session.user
+    });
+  }
+  return res.status(401).json({ message: 'Not authenticated' });
+};
+
+// Logout user by destroying session
+exports.logout = (req, res) => {
+  if (req.session) {
+    req.session.destroy(err => {
+      if (err) {
+        return res.status(500).json({ message: 'Logout failed', error: err.message });
+      }
+      res.clearCookie('connect.sid'); // Clear the session cookie
+      return res.status(200).json({ message: 'Logged out successfully' });
+    });
+  } else {
+    return res.status(200).json({ message: 'Nothing to logout' });
+  }
+};
+
+// Simple ping endpoint to check if server is alive
+exports.ping = (req, res) => {
+  res.status(200).json({ status: 'ok' });
+};
