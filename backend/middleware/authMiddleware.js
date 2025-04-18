@@ -1,48 +1,25 @@
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const authenticateUser = async (req, res, next) => {
-  let token;
-
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      req.user = await User.findById(decoded.id).select('-password');
-      if (!req.user) return res.status(401).json({ message: 'User not found' });
-
-      next();
-    } catch (error) {
-      res.status(401).json({ message: 'Not authorized, token failed' });
-    }
+const authenticateUser = (req, res, next) => {
+  if (req.session && req.session.user) {
+    req.user = req.session.user; // Attach user data to the request object
+    return next();
   }
-
-  if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
-  }
+  res.status(401).json({ message: 'Not authorized, please log in' });
 };
 
-exports.protect = async (req, res, next) => {
-  let token;
-
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      req.user = await User.findById(decoded.id).select('-password');
-      if (!req.user) return res.status(401).json({ message: 'User not found' });
-
-      next();
-    } catch (error) {
-      res.status(401).json({ message: 'Not authorized, token failed' });
-    }
+const protect = (req, res, next) => {
+  console.log("Session data:", req.session);
+  if (req.session && req.session.user) {
+    req.user = req.session.user; // Attach user data to the request object
+    console.log("Authenticated user:", req.user);
+    return next();
   }
-
-  if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
-  }
+  console.log("Not authenticated");
+  res.status(401).json({ message: 'Not authorized, please log in' });
 };
 
-module.exports = authenticateUser;
+module.exports = {
+  authenticateUser,
+  protect
+};

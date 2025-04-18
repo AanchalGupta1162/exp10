@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const recipeRoutes = require('./routes/recipeRoutes');
 const cors = require('cors');
+const session = require('express-session');
 
 dotenv.config();
 
@@ -14,6 +15,15 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 
 app.use(cors());
+
+// Configure session middleware
+app.use(session({
+  secret: 'your-secret-key', // Replace with a strong secret key
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false } // Set to true if using HTTPS
+}));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/recipes', require('./routes/recipeRoutes'));

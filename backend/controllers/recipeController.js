@@ -6,7 +6,13 @@ exports.getAllRecipes = async (req, res) => {
 };
 
 exports.createRecipe = async (req, res) => {
+  // First check if user exists
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+
   const { title, description, ingredients, steps, imageUrl } = req.body;
+  
   try {
     const recipe = await Recipe.create({
       title,
@@ -14,8 +20,10 @@ exports.createRecipe = async (req, res) => {
       ingredients,
       steps,
       imageUrl,
-      // user: req.user._id  // ❌ Remove this line
+      user: req.user.id,  // Updated to use `id` instead of `_id`
+      favorites: []
     });
+    
     res.status(201).json(recipe);
   } catch (err) {
     res.status(400).json({ error: err.message });

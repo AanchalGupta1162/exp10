@@ -35,6 +35,13 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    // Store user data in session
+    req.session.user = {
+      id: user._id,
+      username: user.username,
+      email: user.email
+    };
+
     // 🔄 Send only basic info back to frontend (no token)
     res.json({
       message: "Login successful",
