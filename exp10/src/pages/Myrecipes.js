@@ -1,8 +1,9 @@
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import BasicExample from '../components/Card';
 import '../styles/RecipePages.css';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { useAuth } from '../contexts/AuthContext';
 
 function Myrecipes() {
   const [recipes, setRecipes] = useState([]);
@@ -10,38 +11,49 @@ function Myrecipes() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [currentRecipe, setCurrentRecipe] = useState({ id: null, title: '', description: '', image: '', ingredients: [], instructions: '' });
+  const [currentRecipe, setCurrentRecipe] = useState({ title: '', description: '', image: '', ingredients: [], instructions: '' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
+  const { user } = useAuth();
 
   // 🧠 Fetch recipes on mount
   useEffect(() => {
     const fetchUserRecipes = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/recipes/user', {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch('http://localhost:5000/api/recipes/user', {
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'method': 'GET',
-            // You may need to add auth headers (like JWT) here
-            credentials: 'include' 
-          }
+            'Accept': 'application/json'
+          },
+          credentials: 'include' // Ensure cookies are sent with the request
         });
 
-        if (!res.ok) {
-          throw new Error('Failed to fetch user recipes');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || 'Failed to fetch user recipes');
         }
 
-        const data = await res.json();
+        const data = await response.json();
         setRecipes(data);
         console.log('Fetched user recipes:', data);
       } catch (err) {
         console.error('Error fetching user recipes:', err.message);
+        setError('Failed to load recipes. Please try again later.');
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchUserRecipes();
-  }, []);
-
+    if (user) { // Only fetch recipes if user is logged in
+      fetchUserRecipes();
+    }
+  }, [user]);
 
   // Form handling
   const handleInputChange = (e) => {
@@ -51,50 +63,158 @@ function Myrecipes() {
 
   // CRUD Operations
   // Create
-  const handleAddRecipe = () => {
-    const newRecipe = {
-      ...currentRecipe,
-      id: recipes.length > 0 ? Math.max(...recipes.map(r => r.id)) + 1 : 1,
-      ingredients: currentRecipe.ingredients || [],
-      instructions: currentRecipe.instructions || ''
-    };
-    
-    setRecipes([...recipes, newRecipe]);
-    setCurrentRecipe({ id: null, title: '', description: '', image: '', ingredients: [], instructions: '' });
-    setShowAddModal(false);
+  const handleAddRecipe = async () => {
+    try {
+      // Format recipe data for API
+      const recipeData = {
+        title: currentRecipe.title,
+        description: currentRecipe.description,
+        imageUrl: currentRecipe.image,
+        ingredients: currentRecipe.ingredients || [],
+        steps: currentRecipe.instructions || ''
+      };
+      
+      // Send recipe to backend
+      const response = await fetch('http://localhost:5000/api/recipes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(recipeData)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to create recipe');
+      }
+      
+      // Get the newly created recipe from the response
+      const newRecipe = await response.json();
+      console.log('Created new recipe:', newRecipe);
+      
+      // Update local state
+      setRecipes([...recipes, newRecipe]);
+      
+      // Reset form and close modal
+      setCurrentRecipe({ title: '', description: '', image: '', ingredients: [], instructions: '' });
+      setShowAddModal(false);
+      
+    } catch (err) {
+      console.error('Error creating recipe:', err.message);
+      alert('Failed to create recipe. Please try again.');
+    }
   };
 
   // Read - already implemented with the mapping in the JSX
   const handleViewRecipe = (id) => {
-    const recipe = recipes.find(recipe => recipe.id === id);
+    const recipe = recipes.find(recipe => recipe._id === id);
     if (recipe) {
-      setCurrentRecipe(recipe);
+      // Convert backend format to frontend format
+      const formattedRecipe = {
+        id: recipe._id,
+        title: recipe.title,
+        description: recipe.description,
+        image: recipe.imageUrl,
+        ingredients: recipe.ingredients,
+        instructions: recipe.steps
+      };
+      setCurrentRecipe(formattedRecipe);
       setShowViewModal(true);
     }
   };
 
   // Update
   const handleEditClick = (recipe) => {
-    setCurrentRecipe(recipe);
+    // Convert backend format to frontend format
+    const formattedRecipe = {
+      id: recipe._id,
+      title: recipe.title,
+      description: recipe.description,
+      image: recipe.imageUrl,
+      ingredients: recipe.ingredients,
+      instructions: recipe.steps
+    };
+    setCurrentRecipe(formattedRecipe);
     setShowEditModal(true);
   };
 
-  const handleUpdateRecipe = () => {
-    setRecipes(recipes.map(recipe => 
-      recipe.id === currentRecipe.id ? currentRecipe : recipe
-    ));
-    setShowEditModal(false);
+  const handleUpdateRecipe = async () => {
+    try {
+      // Format recipe data for API
+      const recipeData = {
+        title: currentRecipe.title,
+        description: currentRecipe.description,
+        imageUrl: currentRecipe.image,
+        ingredients: currentRecipe.ingredients,
+        steps: currentRecipe.instructions
+      };
+      
+      // Send update to backend
+      const response = await fetch(`http://localhost:5000/api/recipes/${currentRecipe.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(recipeData)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to update recipe');
+      }
+      
+      const updatedRecipe = await response.json();
+      
+      // Update local state
+      setRecipes(recipes.map(recipe => 
+        recipe._id === currentRecipe.id ? updatedRecipe : recipe
+      ));
+      setShowEditModal(false);
+      
+    } catch (err) {
+      console.error('Error updating recipe:', err.message);
+      alert('Failed to update recipe. Please try again.');
+    }
   };
 
   // Delete
   const handleDeleteClick = (recipe) => {
-    setCurrentRecipe(recipe);
+    // Convert backend format to frontend format
+    const formattedRecipe = {
+      id: recipe._id,
+      title: recipe.title
+    };
+    setCurrentRecipe(formattedRecipe);
     setShowDeleteModal(true);
   };
 
-  const handleDeleteRecipe = () => {
-    setRecipes(recipes.filter(recipe => recipe.id !== currentRecipe.id));
-    setShowDeleteModal(false);
+  const handleDeleteRecipe = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/recipes/${currentRecipe.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to delete recipe');
+      }
+      
+      // Update local state
+      setRecipes(recipes.filter(recipe => recipe._id !== currentRecipe.id));
+      setShowDeleteModal(false);
+      
+    } catch (err) {
+      console.error('Error deleting recipe:', err.message);
+      alert('Failed to delete recipe. Please try again.');
+    }
   };
 
   // Helper to format ingredients as a list if it's an array
@@ -134,7 +254,7 @@ function Myrecipes() {
         <Button 
           variant="success" 
           onClick={() => {
-            setCurrentRecipe({ id: null, title: '', description: '', image: '', ingredients: [], instructions: '' });
+            setCurrentRecipe({ title: '', description: '', image: '', ingredients: [], instructions: '' });
             setShowAddModal(true);
           }}
         >
@@ -142,23 +262,37 @@ function Myrecipes() {
         </Button>
       </div>
 
-      <div className="recipe-grid">
-        {recipes.map(recipe => (
-          <div key={recipe.id} className="recipe-card">
-            <BasicExample 
-              id={recipe.id}
-              title={recipe.title} 
-              description={recipe.description} 
-              image={recipe.image}
-              onViewRecipe={handleViewRecipe}
-            />
-            <div className="recipe-actions">
-              <Button variant="info" size="sm" onClick={() => handleEditClick(recipe)}>Edit</Button>
-              <Button variant="danger" size="sm" onClick={() => handleDeleteClick(recipe)}>Delete</Button>
+      {loading ? (
+        <div className="text-center my-5">
+          <p>Loading your recipes...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center my-5 text-danger">
+          <p>{error}</p>
+        </div>
+      ) : recipes.length === 0 ? (
+        <div className="text-center my-5">
+          <p>You don't have any recipes yet. Click "Add New Recipe" to create one!</p>
+        </div>
+      ) : (
+        <div className="recipe-grid">
+          {recipes.map(recipe => (
+            <div key={recipe._id} className="recipe-card">
+              <BasicExample 
+                id={recipe._id}
+                title={recipe.title} 
+                description={recipe.description} 
+                image={recipe.imageUrl}
+                onViewRecipe={handleViewRecipe}
+              />
+              <div className="recipe-actions">
+                <Button variant="info" size="sm" onClick={() => handleEditClick(recipe)}>Edit</Button>
+                <Button variant="danger" size="sm" onClick={() => handleDeleteClick(recipe)}>Delete</Button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Add Recipe Modal */}
       <Modal show={showAddModal} onHide={() => setShowAddModal(false)}>

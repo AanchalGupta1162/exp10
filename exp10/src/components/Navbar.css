@@ -1,11 +1,20 @@
 .navbar {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 0.75rem 0;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  z-index: 1030;
+  width: 100%;
+}
+
+.navbar-scrolled {
+  background-color: rgba(33, 37, 41, 0.95) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .navbar-container {
   width: 100%;
   max-width: 1200px;
+  padding: 0 15px;
 }
 
 .navbar-brand {
@@ -27,6 +36,7 @@
   font-size: 1.1rem;
   position: relative;
   transition: color 0.3s ease;
+  padding: 0.5rem 0.75rem !important;
 }
 
 .navbar-link::after {
@@ -40,9 +50,34 @@
   transition: all 0.3s ease;
 }
 
-.navbar-link:hover::after {
+.navbar-link:hover::after, .navbar-link.active::after {
   width: 100%;
   left: 0;
+}
+
+.navbar-link.active {
+  color: #fff !important;
+  font-weight: 500;
+}
+
+.auth-buttons {
+  display: flex;
+  align-items: center;
+}
+
+.auth-signup {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  margin-left: 0.5rem;
+}
+
+.user-greeting {
+  display: flex;
+  align-items: center;
+}
+
+#user-dropdown {
+  padding: 0.5rem 0.75rem;
 }
 
 @media (max-width: 992px) {
@@ -52,5 +87,16 @@
   
   .navbar-nav {
     margin-left: 0;
+    padding: 1rem 0;
+  }
+  
+  .auth-buttons {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .auth-signup {
+    margin-left: 0;
+    margin-top: 0.5rem;
   }
 }

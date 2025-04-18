@@ -12,10 +12,8 @@ const safeParseJSON = async (response) => {
   const text = await response.text();
   
   try {
-    // First check if the response is actually JSON
     return JSON.parse(text);
   } catch (e) {
-    // If it's HTML or other non-JSON format, throw a more descriptive error
     if (text.includes('<!DOCTYPE html>')) {
       console.error('Received HTML instead of JSON. Backend may be unavailable.');
       throw new Error('Server error: Received HTML instead of JSON. The server may be down or not accessible.');
@@ -25,24 +23,22 @@ const safeParseJSON = async (response) => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    // Initialize from localStorage on mount
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
   const [loading, setLoading] = useState(true);
   const [serverStatus, setServerStatus] = useState('online');
   const navigate = useNavigate();
 
-  // Initialize auth state on component mount
+  // Initialize auth state on component mount - only once
   useEffect(() => {
+    // Only check auth status once when component mounts
     checkAuthStatus();
     
-    // Set up periodic server checks
-    const serverCheckInterval = setInterval(() => {
-      pingServer();
-    }, 30000); // Check every 30 seconds
-    
-    return () => {
-      clearInterval(serverCheckInterval);
-    };
-  }, []);
+    // No more periodic checks that cause refreshes
+  }, []); // Empty dependency array means this runs only on mount
   
   // Monitor server status changes
   useEffect(() => {
@@ -52,96 +48,43 @@ export const AuthProvider = ({ children }) => {
     }
   }, [serverStatus]);
 
-  // Function to ping server and check its status
-  const pingServer = async () => {
+  // Check authentication status with server - run this manually, not automatically
+  const checkAuthStatus = async () => {
+    setLoading(true);
+    
     try {
-      const response = await fetch('http://localhost:5000/api/auth/ping', {
+      // Check with the server
+      const response = await fetch('http://localhost:5000/api/auth/check-auth', {
         method: 'GET',
+        credentials: 'include',
         headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Content-Type': 'application/json'
         }
       });
       
       if (response.ok) {
-        await safeParseJSON(response); // Make sure we can parse the response
-        setServerStatus('online');
+        const data = await safeParseJSON(response);
+        if (data.user) {
+          setUser(data.user);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          setServerStatus('online');
+        } else {
+          // No user in response but response was ok
+          localStorage.removeItem('user');
+          setUser(null);
+        }
       } else {
-        setServerStatus('offline');
+        // Server says not authenticated
+        localStorage.removeItem('user');
+        setUser(null);
       }
     } catch (error) {
-      console.log('Server connection error:', error);
-      setServerStatus('offline');
-    }
-  };
-
-  // Check authentication status with server
-  const checkAuthStatus = async () => {
-    setLoading(true);
-    try {
+      console.error('Error checking auth status:', error);
+      // Keep stored user if there is one, but this is offline mode
       const storedUser = localStorage.getItem('user');
-      
-      // First check if we have a stored user
       if (storedUser) {
-        // We have a stored user, but validate with server to ensure session is still valid
-        try {
-          const response = await fetch('http://localhost:5000/api/auth/check-auth', {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            }
-          });
-          
-          if (response.ok) {
-            const data = await safeParseJSON(response);
-            if (data.user) {
-              // Session is valid, update with server data
-              setUser(data.user);
-              localStorage.setItem('user', JSON.stringify(data.user));
-              setServerStatus('online');
-            } else {
-              // Session expired on server but we have local data
-              localStorage.removeItem('user');
-              setUser(null);
-            }
-          } else {
-            // Server rejected authentication
-            localStorage.removeItem('user');
-            setUser(null);
-          }
-        } catch (error) {
-          console.error('Error checking auth status:', error);
-          // Server error or offline - keep stored user for now
-          // but mark server as offline
-          setUser(JSON.parse(storedUser));
-          setServerStatus('offline');
-        }
-      } else {
-        // No stored user, check if there's an active session on server
-        try {
-          const response = await fetch('http://localhost:5000/api/auth/check-auth', {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            }
-          });
-          
-          if (response.ok) {
-            const data = await safeParseJSON(response);
-            if (data.user) {
-              setUser(data.user);
-              localStorage.setItem('user', JSON.stringify(data.user));
-              setServerStatus('online');
-            }
-          }
-        } catch (error) {
-          console.error('Error checking for existing session:', error);
-          setServerStatus('offline');
-        }
+        setUser(JSON.parse(storedUser));
+        setServerStatus('offline');
       }
     } finally {
       setLoading(false);
@@ -154,8 +97,7 @@ export const AuthProvider = ({ children }) => {
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ email, password }),
         credentials: 'include'
@@ -181,6 +123,7 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       localStorage.setItem('user', JSON.stringify(data.user));
       setServerStatus('online');
+      
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);
@@ -191,26 +134,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout function
+  // Fixed logout function
   const handleLogout = async (skipApiCall = false) => {
+    // First clear local state to immediately update UI
+    localStorage.removeItem('user');
+    setUser(null);
+    
     if (!skipApiCall) {
       try {
-        await fetch('http://localhost:5000/api/auth/logout', {
+        // Then make the API call to clear the server-side session
+        const response = await fetch('http://localhost:5000/api/auth/logout', {
           method: 'POST',
           credentials: 'include',
           headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Content-Type': 'application/json'
           }
         });
+        
+        if (!response.ok) {
+          console.error("Server logout failed, but user has been logged out locally");
+        }
       } catch (error) {
         console.error('Error during logout:', error);
       }
     }
     
-    // Always clear local state regardless of API response
-    localStorage.removeItem('user');
-    setUser(null);
+    // Navigate after logout is complete
     navigate('/');
   };
 
