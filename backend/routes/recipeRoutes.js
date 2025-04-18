@@ -1,16 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const recipeController = require('../controllers/recipeController');
-const { addFavorite, removeFavorite } = require('../controllers/recipeController');
-const { protect } = require('../middleware/authMiddleware');
+const {
+  getAllRecipes,
+  createRecipe,
+  addFavorite,
+  removeFavorite
+} = require('../controllers/recipeController');
 
-// Public route
-router.get('/', recipeController.getAllRecipes);
+// Public route to fetch all recipes
+router.get('/', getAllRecipes);
 
-// Admin-only route
-router.post('/', recipeController.createRecipe);
+// Public route to create a recipe (no auth)
+router.post('/', createRecipe);
 
-router.post('/:id/favorite', protect, addFavorite);
-router.delete('/:id/favorite', protect, removeFavorite);
+// Public route to add/remove favorites (no auth)
+router.post('/:id/favorite', addFavorite);
+router.delete('/:id/favorite', removeFavorite);
 
 module.exports = router;
