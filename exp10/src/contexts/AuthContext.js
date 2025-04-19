@@ -172,6 +172,7 @@ export const AuthProvider = ({ children }) => {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
+        credentials: 'include', // Add credentials for consistent behavior
         body: JSON.stringify(userData)
       });
 
