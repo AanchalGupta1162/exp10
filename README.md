@@ -2,7 +2,9 @@
 
 Recipe Master is a full-stack web application that allows users to discover, create, and manage their favorite recipes. Built with React and Node.js, it provides a seamless experience for recipe enthusiasts to explore culinary creations and maintain their own personal collection.
 
-![Recipe Master](https://github.com/yourusername/recipe-master/raw/main/screenshots/home.png)
+![Screenshot 2025-04-19 143326](https://github.com/user-attachments/assets/5e809f48-ef73-4c82-8d09-3af70146014a)
+
+![Screenshot 2025-04-19 143539](https://github.com/user-attachments/assets/25d8c94c-b789-49f2-ace2-d3165fde611d)
 
 ## Features
 
