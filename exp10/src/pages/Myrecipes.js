@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import BasicExample from '../components/Card';
 import '../styles/RecipePages.css';
 import { useFavorites } from '../contexts/FavoritesContext';
@@ -14,6 +15,7 @@ function Myrecipes() {
   const [currentRecipe, setCurrentRecipe] = useState({ title: '', description: '', image: '', ingredients: [], instructions: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [creators, setCreators] = useState({}); // Store user info by ID
 
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
   const { user } = useAuth();
@@ -41,7 +43,13 @@ function Myrecipes() {
 
         const data = await response.json();
         setRecipes(data);
-        console.log('Fetched user recipes:', data);
+        
+        // Collect unique user IDs from recipes
+        const userIds = [...new Set(data.map(recipe => recipe.user))];
+        
+        // Fetch user data for each creator
+        await fetchCreatorInfo(userIds);
+        
       } catch (err) {
         console.error('Error fetching user recipes:', err.message);
         setError('Failed to load recipes. Please try again later.');
@@ -52,8 +60,42 @@ function Myrecipes() {
 
     if (user) { // Only fetch recipes if user is logged in
       fetchUserRecipes();
+    } else {
+      // Set loading to false if user is not logged in
+      setLoading(false);
     }
   }, [user]);
+  
+  // Fetch creator information
+  const fetchCreatorInfo = async (userIds) => {
+    try {
+      // Create a temporary object to store creator info
+      const creatorData = {};
+      
+      // For simplicity, we're using the current user's name if it matches the ID
+      // In a real app, you would make API calls to fetch user info for each unique user ID
+      if (user) {
+        userIds.forEach(id => {
+          if (id === user.id) {
+            creatorData[id] = {
+              username: user.username
+            };
+          } else {
+            // For other users, we could fetch their info from the server
+            // For now, use a placeholder
+            creatorData[id] = {
+              username: "Recipe Creator"
+            };
+          }
+        });
+      }
+      
+      setCreators(creatorData);
+      
+    } catch (error) {
+      console.error('Error fetching creator information:', error);
+    }
+  };
 
   // Form handling
   const handleInputChange = (e) => {
@@ -251,18 +293,44 @@ function Myrecipes() {
     <div className="recipe-container">
       <div className="recipes-header">
         <h1>My Recipes</h1>
-        <Button 
-          variant="success" 
-          onClick={() => {
-            setCurrentRecipe({ title: '', description: '', image: '', ingredients: [], instructions: '' });
-            setShowAddModal(true);
-          }}
-        >
-          Add New Recipe
-        </Button>
+        {user && (
+          <Button 
+            variant="success" 
+            onClick={() => {
+              setCurrentRecipe({ title: '', description: '', image: '', ingredients: [], instructions: '' });
+              setShowAddModal(true);
+            }}
+          >
+            Add New Recipe
+          </Button>
+        )}
       </div>
 
-      {loading ? (
+      {!user ? (
+        <div className="text-center my-5">
+          <div className="login-required-message">
+            <h4>Please login to view and manage your recipes</h4>
+            <p>Create an account or login to save and manage your favorite recipes.</p>
+            <div className="mt-4">
+              <Button 
+                as={Link} 
+                to="/login" 
+                variant="primary" 
+                className="me-3"
+              >
+                Login
+              </Button>
+              <Button 
+                as={Link} 
+                to="/signup" 
+                variant="outline-primary"
+              >
+                Sign Up
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : loading ? (
         <div className="text-center my-5">
           <p>Loading your recipes...</p>
         </div>
@@ -284,11 +352,11 @@ function Myrecipes() {
                 description={recipe.description} 
                 image={recipe.imageUrl}
                 onViewRecipe={handleViewRecipe}
+                showActionButtons={true}
+                onEditClick={() => handleEditClick(recipe)}
+                onDeleteClick={() => handleDeleteClick(recipe)}
+                creatorName={creators[recipe.user]?.username || "Unknown Creator"}
               />
-              <div className="recipe-actions">
-                <Button variant="info" size="sm" onClick={() => handleEditClick(recipe)}>Edit</Button>
-                <Button variant="danger" size="sm" onClick={() => handleDeleteClick(recipe)}>Delete</Button>
-              </div>
             </div>
           ))}
         </div>

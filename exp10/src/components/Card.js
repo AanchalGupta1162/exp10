@@ -3,7 +3,18 @@ import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
 import { useFavorites } from '../contexts/FavoritesContext';
 
-function BasicExample({ id, title, description, image, onViewRecipe, showFavoriteButton = true }) {
+function BasicExample({ 
+  id, 
+  title, 
+  description, 
+  image, 
+  onViewRecipe, 
+  showFavoriteButton = true,
+  onEditClick,
+  onDeleteClick,
+  showActionButtons = false,
+  creatorName = null
+}) {
   // Default placeholder image if none provided
   const imageUrl = image || 'https://via.placeholder.com/300x180?text=Recipe+Image';
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
@@ -39,15 +50,52 @@ function BasicExample({ id, title, description, image, onViewRecipe, showFavorit
       </div>
       <Card.Body>
         <Card.Title>{title || 'Recipe Title'}</Card.Title>
+        {creatorName && (
+          <Card.Subtitle className="mb-2 text-muted">
+            <small>Created by: {creatorName}</small>
+          </Card.Subtitle>
+        )}
         <Card.Text>
           {description || 'Some quick example text to build on the card title and make up the bulk of the card\'s content.'}
         </Card.Text>
-        <Button 
-          variant="primary" 
-          onClick={() => onViewRecipe && onViewRecipe(id)}
-        >
-          View Recipe
-        </Button>
+        <div className="d-flex justify-content-between">
+          <Button 
+            variant="primary" 
+            onClick={() => onViewRecipe && onViewRecipe(id)}
+          >
+            View Recipe
+          </Button>
+          
+          {showActionButtons && (
+            <div className="ms-2">
+              {onEditClick && (
+                <Button 
+                  variant="outline-info" 
+                  size="sm" 
+                  className="me-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditClick();
+                  }}
+                >
+                  <i className="bi bi-pencil-square"></i>
+                </Button>
+              )}
+              {onDeleteClick && (
+                <Button 
+                  variant="outline-danger" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteClick();
+                  }}
+                >
+                  <i className="bi bi-trash"></i>
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </Card.Body>
     </Card>
   );

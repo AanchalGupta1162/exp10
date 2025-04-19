@@ -17,18 +17,20 @@ function App() {
     <Router>
       <AuthProvider>
         <FavoritesProvider>
-          <Navbar />
-          <div className="main-content">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/recipes" element={<Recipes />} />
-              <Route path="/myrecipes" element={<Myrecipes />} />
-              <Route path="/favorites" element={<Favorites />} />
-            </Routes>
+          <div className="app-container">
+            <Navbar />
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/recipes" element={<Recipes />} />
+                <Route path="/myrecipes" element={<Myrecipes />} />
+                <Route path="/favorites" element={<Favorites />} />
+              </Routes>
+            </main>
+            <Footer />
           </div>
-          <Footer />
         </FavoritesProvider>
       </AuthProvider>
     </Router>

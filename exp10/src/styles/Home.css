@@ -1,89 +1,13 @@
-/* Home page styling with kawaii theme */
 .home-page {
-  position: relative;
+  margin: 0;
+  padding: 0;
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
-  padding-top: 90px; /* Space for navbar */
+  height: calc(100vh - 56px); /* Exactly viewport height minus navbar */
+  display: flex;
+  flex-direction: column;
 }
 
-.home-header {
-  position: absolute;
-  top: 120px;
-  left: 0;
-  width: 100%;
-  text-align: center;
-  z-index: 10; /* Ensure text stays above the Spline object */
-  padding: 0 20px;
-}
-
-.home-header h1 {
-  font-size: 3.5rem;
-  margin-bottom: 1rem;
-  color: var(--color-kawaii-dark);
-  text-shadow: 3px 3px 0px rgba(255, 255, 255, 0.8), 
-               5px 5px 0px rgba(var(--color-kawaii-accent), 0.3);
-  letter-spacing: 1px;
-}
-
-.home-header p {
-  font-size: 1.8rem;
-  margin-bottom: 2rem;
-  color: var(--color-kawaii-primary);
-  font-weight: bold;
-  text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8);
-}
-
-.spline-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-/* Kawaii button style */
-.kawaii-btn {
-  background-color: var(--color-kawaii-accent);
-  color: #fff;
-  border: none;
-  border-radius: 30px;
-  padding: 12px 30px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
-  transform: translateY(0);
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-}
-
-.kawaii-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 7px 0 rgba(0, 0, 0, 0.1);
-}
-
-.kawaii-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .home-header h1 {
-    font-size: 2.8rem;
-  }
-  
-  .home-header p {
-    font-size: 1.4rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .home-header h1 {
-    font-size: 2.2rem;
-  }
-  
-  .home-header p {
-    font-size: 1.2rem;
-  }
+/* Remove all potentially unused classes that might add spacing */
+.home-header, .spline-container {
+  display: none;
 }

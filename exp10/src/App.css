@@ -44,6 +44,7 @@ body {
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1;
 }
 
 #root {
@@ -52,36 +53,58 @@ body {
   min-height: 100vh;
 }
 
-.main-content {
-  padding-top: 76px; /* Based on navbar height */
-  flex: 1;
+.app-container {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.main-content {
+  padding-top: 56px; /* Exact navbar height */
+  display: block;
+  flex: 1 0 auto; /* Take up available space but don't shrink */
   width: 100%;
+  margin: 0;
+  padding-bottom: 0;
 }
 
 /* Container styles to ensure consistent padding and width */
 .container, .container-fluid {
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-  max-width: 1320px;
-  margin-left: auto;
-  margin-right: auto;
+  padding-left: 0;
+  padding-right: 0;
+  max-width: 100%;
+  margin: 0;
 }
 
 /* Page section spacing */
 section {
-  padding: 2rem 0;
+  padding: 0; /* Removed padding */
 }
 
 /* Make sure all page containers take up available space */
 .recipe-container, .container {
   flex: 1;
+  margin: 0; /* Added to remove any margin */
 }
 
-/* For consistent margin underneath content and above footer */
+/* Remove margin underneath content and above footer */
 .main-content > div {
-  margin-bottom: 2rem;
+  margin-bottom: 0; /* Changed from 2rem to 0 */
+}
+
+/* Specify footer should be at the bottom */
+footer.footer {
+  margin-top: 0;
+}
+
+/* For the Home page */
+.home-page {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Responsive adjustments */
