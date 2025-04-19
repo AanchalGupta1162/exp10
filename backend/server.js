@@ -26,8 +26,13 @@ app.use(cors({
 app.use(session({
   secret: 'your-secret-key', // Replace with a strong secret key
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false } // Set to true if using HTTPS
+  saveUninitialized: false, // Changed to false to avoid creating empty sessions
+  cookie: { 
+    secure: false, // Set to true if using HTTPS
+    httpOnly: true, // Prevents client-side JS from reading the cookie
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week in milliseconds
+    sameSite: 'lax' // Helps with CSRF protection
+  }
 }));
 
 // Routes

@@ -20,6 +20,7 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   console.log("Login attempt:", email);
+  console.log("Session ID at login start:", req.sessionID);
 
   try {
     const user = await User.findOne({ email });
@@ -42,17 +43,27 @@ exports.login = async (req, res) => {
       email: user.email
     };
 
-    // 🔄 Send only basic info back to frontend (no token)
-    res.json({
-      message: "Login successful",
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email
+    // Make sure session is saved before sending response
+    req.session.save(err => {
+      if (err) {
+        console.error("Error saving session:", err);
+        return res.status(500).json({ message: "Session error", error: err.message });
       }
-    });
-    console.log("Login successful:", email);
+      
+      console.log("Session saved successfully with user:", req.session.user);
+      console.log("Session ID after login:", req.sessionID);
 
+      // 🔄 Send only basic info back to frontend (no token)
+      res.json({
+        message: "Login successful",
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email
+        }
+      });
+      console.log("Login successful for:", email);
+    });
 
   } catch (err) {
     console.error("Login error:", err.message);
@@ -62,11 +73,17 @@ exports.login = async (req, res) => {
 
 // Check if user is authenticated via session
 exports.checkAuth = (req, res) => {
+  console.log("Check auth called, session ID:", req.sessionID);
+  console.log("Session data in checkAuth:", req.session);
+  
   if (req.session && req.session.user) {
+    console.log("User found in session:", req.session.user);
     return res.status(200).json({
       user: req.session.user
     });
   }
+  
+  console.log("No user in session");
   return res.status(401).json({ message: 'Not authenticated' });
 };
 

@@ -5,7 +5,9 @@ const {
   createRecipe,
   addFavorite,
   removeFavorite,
-  getUserRecipes
+  getUserRecipes,
+  updateRecipe,
+  deleteRecipe
 } = require('../controllers/recipeController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -14,6 +16,10 @@ router.get('/', getAllRecipes);
 
 // Protected route to create a recipe (requires auth)
 router.post('/', protect, createRecipe);
+
+// Protected routes for update and delete operations
+router.put('/:id', protect, updateRecipe);
+router.delete('/:id', protect, deleteRecipe);
 
 // Public route to add/remove favorites (no auth)
 router.post('/:id/favorite', addFavorite);
