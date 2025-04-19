@@ -75,3 +75,72 @@ exports.removeFavorite = async (req, res) => {
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
+exports.updateRecipe = async (req, res) => {
+  try {
+    // Check if user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    const { id } = req.params;
+    const { title, description, ingredients, steps, imageUrl } = req.body;
+    
+    // Find the recipe and verify ownership
+    const recipe = await Recipe.findById(id);
+    
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+    
+    // Verify that the user owns this recipe
+    if (recipe.user.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this recipe' });
+    }
+    
+    // Update the recipe
+    recipe.title = title;
+    recipe.description = description;
+    recipe.ingredients = ingredients;
+    recipe.steps = steps;
+    recipe.imageUrl = imageUrl;
+    
+    await recipe.save();
+    
+    res.json(recipe);
+  } catch (error) {
+    console.error('Error updating recipe:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.deleteRecipe = async (req, res) => {
+  try {
+    // Check if user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    const { id } = req.params;
+    
+    // Find the recipe and verify ownership
+    const recipe = await Recipe.findById(id);
+    
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+    
+    // Verify that the user owns this recipe
+    if (recipe.user.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this recipe' });
+    }
+    
+    // Delete the recipe
+    await Recipe.findByIdAndDelete(id);
+    
+    res.json({ message: 'Recipe deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting recipe:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
