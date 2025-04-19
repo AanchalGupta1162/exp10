@@ -1,13 +1,94 @@
+:root {
+  --font-kawaii-heading: 'Bubblegum Sans', cursive;
+  --font-kawaii-body: 'Comic Neue', cursive;
+  --font-kawaii-alt: 'Varela Round', sans-serif;
+  --color-kawaii-primary: #ff6b6b;
+  --color-kawaii-secondary: #67d5b5;
+  --color-kawaii-accent: #ffcc5c;
+  --color-kawaii-dark: #574b90;
+  --color-kawaii-light: #fffcf2;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-kawaii-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #333;
+  background-color: var(--color-kawaii-light);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-kawaii-heading);
+  font-weight: 700;
+}
+
+.navbar-brand {
+  font-family: var(--font-kawaii-heading);
+  font-size: 1.8rem !important;
+}
+
+.nav-link, button, .btn {
+  font-family: var(--font-kawaii-alt);
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Adding kawaii styling to Bootstrap components */
+.card {
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1) !important;
+  border: none !important;
+}
+
+.btn {
+  border-radius: 25px !important;
+  padding: 8px 20px !important;
+  font-weight: bold !important;
+  transition: transform 0.3s, box-shadow 0.3s !important;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15) !important;
+}
+
+.form-control {
+  border-radius: 12px !important;
+  padding: 10px 15px !important;
+  border: 2px solid #eee !important;
+}
+
+.form-control:focus {
+  border-color: var(--color-kawaii-accent) !important;
+  box-shadow: 0 0 0 0.25rem rgba(255, 204, 92, 0.25) !important;
+}
+
+/* Overriding Bootstrap colors with kawaii colors */
+.btn-primary {
+  background-color: var(--color-kawaii-primary) !important;
+  border-color: var(--color-kawaii-primary) !important;
+}
+
+.btn-primary:hover {
+  background-color: #ff5252 !important;
+  border-color: #ff5252 !important;
+}
+
+.btn-secondary {
+  background-color: var(--color-kawaii-secondary) !important;
+  border-color: var(--color-kawaii-secondary) !important;
+}
+
+.btn-secondary:hover {
+  background-color: #5bc2a8 !important;
+  border-color: #5bc2a8 !important;
+}
+
+.text-muted {
+  color: #9a9a9a !important;
 }

@@ -106,7 +106,7 @@ function Login() {
             <Card.Body className="p-5">
               <div className="text-center mb-4">
                 <h2 className="fw-bold">Welcome Back</h2>
-                <p className="text-muted">Sign in to continue to Car Showroom</p>
+                <p className="text-muted">Sign in to continue to Recipe Master</p>
               </div>
 
               {message && <Alert variant="success">{message}</Alert>}
